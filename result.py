@@ -2,7 +2,7 @@ import requests, jsonpath, json
 from getpath import getpath
 
 
-class DATA():
+class Result():
     def __init__(self, project, start_time, end_time):
         self.result_list = ''
         self.result_dic = {}
@@ -48,9 +48,9 @@ class DATA():
                     result_list_copy.pop(0)
                 else:
                     break
-        return self.result_dic
 
     def merge_restul(self):
+        self.set_result_dic()
         cpu_rate_list = self.get_grafana_result("cpu")
         cpu_rate_avg = sum(cpu_rate_list) / len(cpu_rate_list)
         for apiname in self.api_name_list:
@@ -92,11 +92,3 @@ class DATA():
         rate_list = [float(x[1]) for x in jsonpath.jsonpath(json.loads(response.content), 'data.result[0].values')[0]]
         return rate_list
 
-    def result_out(self):
-        test_result = self.merge_restul()
-        with open("testresult.csv", "a")as f:
-            f.write("API_NAME,TPS,CPU_RATE\n")
-            for apiname in test_result.keys():
-                f.write("{0},{1},{2}\n".format(apiname, test_result[apiname]["TPS"],
-                                               test_result[apiname]["CPU_RATE"]))
-        print("success")
