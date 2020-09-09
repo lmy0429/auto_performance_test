@@ -92,9 +92,6 @@ class Result():
         self.api_result_dic["AVG_TIME"] = avg_time
 
     def get_grafana_result(self, rate_name):
-        # config_path = "project.{0}.config".format(self.project)
-        # config = __import__(config_path)
-        # rate_name_url = getattr(config, rate_name)
         config_path = getpath(self.project).get("config_path")
         with open(config_path, "r", encoding='utf-8')as f:
             config = json.load(f)

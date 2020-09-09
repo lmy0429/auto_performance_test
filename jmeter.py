@@ -1,6 +1,6 @@
-import os, time
+import os
 from string import Template
-import getpath, shutil
+import getpath
 
 
 class Script():
@@ -12,13 +12,6 @@ class Script():
 
     def jmeter_run(self, jmx_script):
         excute_jmx_script = self.jmx_script_path + os.path.sep + jmx_script
-        try:
-            shutil.rmtree(self.path["base"] + "/data/report/{0}".format(self.project))
-            shutil.rmtree(self.path["base"] + "/data/result/{0}".format(self.project))
-        except Exception:
-            print(Exception)
-            pass
-        time.sleep(1)
         os.mkdir(self.path["base"] + "/data/result/{0}".format(self.project))
         os.mkdir(self.path["base"] + "/data/report/{0}".format(self.project))
         result_path = self.path["base"] + "/data/result/{0}".format(self.project)
