@@ -19,7 +19,7 @@ def run(project, threads_num, loops):
         end_time = int(time.time())+ 5000  # 增加5s以获取更准确的服务器监控数据
         result = Result(project, jmx_script,start_time, end_time)
         test_result = result.merge_restul()
-        result_out(project, test_result)
+        result_out(project, jmx_script,test_result)
 
 
 # project = args["project"]
