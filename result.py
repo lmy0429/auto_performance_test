@@ -1,12 +1,14 @@
 import requests, jsonpath, json
+from getpath import getpath
 
 
 class DATA():
     def __init__(self, project, start_time, end_time):
         self.result_list = ''
-        self.result_dic = ''
+        self.result_dic = {}
         self.api_name_list = ''
-        self.test_result = ''
+        self.test_result = {}
+        self.api_result_dic = {}
         self.project = project
         self.start_time = start_time
         self.end_time = end_time
@@ -26,59 +28,72 @@ class DATA():
         return data.get('label')
 
     def set_result_dic(self):
-        self.result_list = self.testresultdata("./result/test.csv")
+        self.result_list = self.testresultdata(getpath(self.project).get("result_csv"))
         self.result_list.sort(key=self.label)
         result_list_copy = self.result_list
         api_name = [i.get("label") for i in self.result_list]
         self.api_name_list = list(set(api_name))
         self.api_name_list.sort()
-        result_dic = {}
         for i in range(len(self.api_name_list)):
             values = []
             for j in range(len(result_list_copy)):
-                if self.api_name_list[i] not in result_dic:
+                if self.api_name_list[i] not in self.result_dic:
                     values.append(result_list_copy[0])
-                    result_dic[self.api_name_list[i]] = values
+                    self.result_dic[self.api_name_list[i]] = values
                     result_list_copy.pop(0)
                     continue
                 if self.api_name_list[i] == result_list_copy[0].get("label"):
                     values.append(result_list_copy[0])
-                    result_dic[self.api_name_list[i]] = values
+                    self.result_dic[self.api_name_list[i]] = values
                     result_list_copy.pop(0)
                 else:
                     break
-        return result_dic
+        return self.result_dic
 
-    def set_test_restul(self):
-        test_result = {}
-        api_dic = {}
-        cpu_rate_list = self.get_grafanadata()
+    def merge_restul(self):
+        cpu_rate_list = self.get_grafana_result("cpu")
         cpu_rate_avg = sum(cpu_rate_list) / len(cpu_rate_list)
-        api_dic["CPU_RATE"] = cpu_rate_avg
         for apiname in self.api_name_list:
-            timeStamp_list = [int(single_result.get("timeStamp")) for single_result in self.result_dic.get(apiname)]
-            print(timeStamp_list)
-            total_time = max(timeStamp_list) - min(timeStamp_list)
-            tps = len(timeStamp_list) / total_time * 1000
-            print(tps)
-            api_dic["TPS"] = tps
-            test_result[apiname] = api_dic
-            api_dic = api_dic.copy()
-        print(test_result)
-        return test_result
+            self.avg_time_result(apiname)
+            self.tps_result(apiname)
+            self.success_result(apiname)
+            self.test_result[apiname] = self.api_result_dic
+            self.api_result_dic["CPU_RATE"] = cpu_rate_avg
+        print(self.test_result)
+        return self.test_result
 
-    def get_grafanadata(self):
+    def tps_result(self, apiname):
+        self.api_result_dic = {}
+        timeStamp_list = [int(single_result.get("timeStamp")) for single_result in self.result_dic.get(apiname)]
+        total_time = max(timeStamp_list) - min(timeStamp_list)
+        tps = len(timeStamp_list) / total_time * 1000
+        self.api_result_dic["TPS"] = tps
+        return self.api_result_dic
+
+    def success_result(self, apiname):
+        success_result_list = [result.get('success') for result in self.result_dic.get(apiname)]
+        error_count = success_result_list.count("false")
+        self.api_result_dic["Error"] = error_count
+
+    def avg_time_result(self, apiname):
+        time_list = [time.get("elapsed") for time in self.result_dic.get(apiname)]
+        sum_time = 0
+        for time in time_list:
+            sum_time += int(time)
+        avg_time = sum_time / len(time_list)
+        self.api_result_dic["AVG_TIME"] = avg_time
+
+    def get_grafana_result(self, rate_name):
         config = __import__(self.project)
-        cpu_rate_url = getattr(config, "grafana_baseurl" + "grafana_cpuurl")
+        rate_name_url = getattr(config, rate_name)
         header = getattr(config, "grafana_header")
-        cpu_response = requests.get(cpu_rate_url.format(self.start_time, self.end_time), headers=header)
-        print(cpu_response.content)
-        cpu_rate_list = [float(x[1]) for x in jsonpath.jsonpath(json.loads(cpu_response.content),
-                                                                'data.result[0].values')[0]]
-        return cpu_rate_list
+        response = requests.get(rate_name_url.format(self.start_time, self.end_time), headers=header)
+        print("{}查询结果：".format(rate_name) + response.content)
+        rate_list = [float(x[1]) for x in jsonpath.jsonpath(json.loads(response.content), 'data.result[0].values')[0]]
+        return rate_list
 
     def result_out(self):
-        test_result = self.set_test_restul()
+        test_result = self.merge_restul()
         with open("testresult.csv", "a")as f:
             f.write("API_NAME,TPS,CPU_RATE\n")
             for apiname in test_result.keys():
