@@ -1,8 +1,8 @@
-import argparse, time,shutil
+import argparse, time, shutil
 from jmeter import Script
 from result import Result
 from output import result_out
-from getpath import getpath
+from config import getpath
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--project", required=True, help="project name")
@@ -13,7 +13,7 @@ args = vars(ap.parse_args())
 
 def run(project, threads_num, loops):
     jmeter = Script(project)
-    path=getpath(project)
+    path = getpath(project)
     try:
         shutil.rmtree(path["base"] + "/data/report/{0}".format(project))
     except Exception:
@@ -31,7 +31,8 @@ def run(project, threads_num, loops):
         jmeter.jmeter_run(jmx_script)
         end_time = int(time.time()) + 5000  # 增加5s以获取更准确的服务器监控数据
         result = Result(project, jmx_script, start_time, end_time)
-        test_result = result.merge_restul()
+        result.set_csv_data(getpath(project).get("result_csv")+"/{0}".format(jmx_script))
+        test_result = result.set_result_data(getpath(project).get("report_path")+"/{0}".format(jmx_script))
         result_out(project, jmx_script, test_result)
 
 

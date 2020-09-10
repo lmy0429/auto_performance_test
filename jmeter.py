@@ -1,13 +1,13 @@
 import os
 from string import Template
-import getpath
+import config
 
 
 class Script():
 
     def __init__(self, project):
         self.project = project
-        self.path = getpath.getpath(project)
+        self.path = config.getpath(project)
         self.jmx_script_path = self.path["jmx_script_path"]
 
     def jmeter_run(self, jmx_script):
