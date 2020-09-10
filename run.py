@@ -31,8 +31,8 @@ def run(project, threads_num, loops):
         jmeter.jmeter_run(jmx_script)
         end_time = int(time.time()) + 5000  # 增加5s以获取更准确的服务器监控数据
         result = Result(project, jmx_script, start_time, end_time)
-        result.set_csv_data(getpath(project).get("result_csv")+"/{0}".format(jmx_script))
-        test_result = result.set_result_data(getpath(project).get("report_path")+"/{0}".format(jmx_script))
+        result.set_csv_data(getpath(project).get("result_csv")+"/{0}".format(jmx_script[:-4]))
+        test_result = result.set_result_data(getpath(project).get("report_path")+"/{0}".format(jmx_script[:-4]))
         result_out(project, jmx_script, test_result)
 
 

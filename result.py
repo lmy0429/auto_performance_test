@@ -1,7 +1,7 @@
 import requests, jsonpath, json, os, time
 from config import getpath
 from sqlite_utils import Database
-from . import config
+import config
 
 
 class Result():
@@ -11,7 +11,7 @@ class Result():
         self.api_name_list = ''
         self.test_result = {}
         self.project = project
-        self.jmx_script=jmx_script
+        self.jmx_script = jmx_script
         self.start_time = start_time
         self.end_time = end_time
 
@@ -27,7 +27,7 @@ class Result():
                     for row_data in data:
                         data_dic = dict(zip(data_title, row_data.split(",")))
                         data_dic["project"] = self.project
-                        data_dic["start_time"] = time.strftime("%Y-%m-%d %X")
+                        data_dic["start_time"] = time.strftime("%Y-%m-%d %X", time.localtime(self.start_time))
                         csv_data.append(data_dic)
         db = Database(config.db)
         db["csv_data"].insert_all(csv_data, hash_id="id")
@@ -38,16 +38,20 @@ class Result():
         # memory_rate_list = self.get_grafana_result("memory")
         # memory_rate_avg = self.avg(memory_rate_list)
         with open(path + os.path.sep + "statistics.json", "r", encoding="utf-8")as f:
-            data = json.load(f)
-        data_dic = json.loads(data)
+            data_dic = json.load(f)
         sample_list = data_dic.keys()
-        data_dic["project"] = self.project
-        data_dic["start_time"] = time.strftime("%Y-%m-%d %X")
         for sample in sample_list:
             data_dic[sample]["cpu"] = cpu_rate_avg
             # data_dic[sample]["memory"] = memory_rate_avg
+        str_start_time = time.strftime("%Y-%m-%d %X", time.localtime(self.start_time))
         db = Database(config.db)
-        db["test_result"].insert(data_dic, hash_id="id")
+        db["test_result"].insert({
+            "project": self.project,
+            "start_time": str_start_time,
+            "result": data_dic},
+            hash_id="id")
+        data_dic["project"] = self.project
+        data_dic["start_time"] = str_start_time
         self.test_result = data_dic
         return self.test_result
 

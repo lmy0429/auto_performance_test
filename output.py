@@ -9,6 +9,8 @@ def result_out(project, jmx_script, test_result):
         f.write(
             "transaction,sampleCount,errorCount,errorPct,meanResTime,minResTime,maxResTime,90%ResTime,95%ResTime,"
             "99%ResTime,throughput,CPU,memory,receivedKBytesPerSec,sentKBytesPerSec\n")
+        del test_result["project"]
+        del test_result["start_time"]
         for apiname in test_result.keys():
             row_data = Template(template).safe_substitute(
                 transaction=test_result[apiname]["transaction"],
