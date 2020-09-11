@@ -26,7 +26,7 @@ class Script():
         result_path = self.path["base"] + "/data/result/{0}".format(self.project)
         os.mkdir(result_path + "/{0}".format(jmx_script[3:-4]))
         report_path = (self.path["base"] + "/data/report/{0}/{1}".format(self.project, jmx_script[3:-4]))
-        command = 'D:/apache-jmeter-5.1.1/bin/jmeter.bat -n -t {0} -l {1}/{2}/{2}.csv -j {1}/{2}/{2}log -e -o {3} &'.format(
+        command = 'jmeter -n -t {0} -l {1}/{2}/{2}.csv -j {1}/{2}/{2}log -e -o {3} &'.format(
             excute_jmx_script, result_path, jmx_script[3:-4], report_path)
         os.system(command)
         os.remove(excute_jmx_script)
