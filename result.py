@@ -34,15 +34,15 @@ class Result():
 
     def set_result_data(self, path, threads_num, loops):
         cpu_rate_list = self.get_grafana_result("cpu")
-        cpu_rate_avg = self.avg(cpu_rate_list)
-        # memory_rate_list = self.get_grafana_result("memory")
-        # memory_rate_avg = self.avg(memory_rate_list)
+        cpu_rate_avg = self.cpu_avg(cpu_rate_list)
+        memory_rate_list = self.get_grafana_result("memory")
+        memory_rate_avg = self.memory_avg(memory_rate_list)
         with open(path + os.path.sep + "statistics.json", "r", encoding="utf-8")as f:
             data_dic = json.load(f)
         sample_list = data_dic.keys()
         for sample in sample_list:
             data_dic[sample]["cpu"] = cpu_rate_avg
-            # data_dic[sample]["memory"] = memory_rate_avg
+            data_dic[sample]["memory"] = memory_rate_avg
         str_start_time = time.strftime("%Y-%m-%d %X", time.localtime(self.start_time))
         db = Database(config.db)
         db["test_result"].insert({
@@ -62,16 +62,23 @@ class Result():
         return self.test_result
 
     def get_grafana_result(self, rate_name):
-        config_path = getpath(self.project).get("config_path")
-        with open(config_path, "r", encoding='utf-8')as f:
-            config = json.load(f)
-        rate_name_url = config.get(rate_name)
-        header = config.get("grafana_header")
+        try:
+            config_path = getpath(self.project).get("config_path")
+            with open(config_path, "r", encoding='utf-8')as f:
+                config = json.load(f)
+            rate_name_url = config.get(rate_name)
+            header = config.get("grafana_header")
+        except:
+            print("请在项目配置文件（config.json）中设置grafana配置")
         response = requests.get(rate_name_url.format(self.start_time, self.end_time), headers=header)
         print("{}查询结果：".format(rate_name) + response.content.decode("utf-8"))
         rate_list = [float(x[1]) for x in jsonpath.jsonpath(json.loads(response.content), 'data.result[0].values')[0]]
         return rate_list
 
-    def avg(self, data_list):
+    def cpu_avg(self, data_list):
         avg = sum(data_list) / len(data_list)
+        return avg
+
+    def memory_avg(self,data_list):
+        avg=sum(data_list)/(1024*1024*1024*len(data_list))
         return avg

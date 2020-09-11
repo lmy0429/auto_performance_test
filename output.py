@@ -28,7 +28,7 @@ def result_out(project, jmx_script, test_result):
                 pct3ResTime=str(test_result[apiname]["pct3ResTime"]),
                 throughput=str(test_result[apiname]["throughput"]),
                 CPU=str(test_result[apiname]["cpu"]),
-                memory="",
+                memory=str(test_result[apiname]["memory"]),
                 receivedKBytesPerSec=str(test_result[apiname]["receivedKBytesPerSec"]),
                 sentKBytesPerSec=str(test_result[apiname]["sentKBytesPerSec"])
             )
