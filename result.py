@@ -32,7 +32,7 @@ class Result():
         db = Database(config.db)
         db["csv_data"].insert_all(csv_data, hash_id="id")
 
-    def set_result_data(self, path):
+    def set_result_data(self, path, threads_num, loops):
         cpu_rate_list = self.get_grafana_result("cpu")
         cpu_rate_avg = self.avg(cpu_rate_list)
         # memory_rate_list = self.get_grafana_result("memory")
@@ -47,11 +47,17 @@ class Result():
         db = Database(config.db)
         db["test_result"].insert({
             "project": self.project,
+            "scenario": self.jmx_script[:-4].replace("tmp",""),
+            "threads_num": threads_num,
+            "loops": loops,
             "start_time": str_start_time,
             "result": data_dic},
             hash_id="id")
         data_dic["project"] = self.project
+        data_dic["scenario"] = self.jmx_script[:-4].replace("tmp","")
         data_dic["start_time"] = str_start_time
+        data_dic["threads_num"] = threads_num
+        data_dic["loops"] = loops
         self.test_result = data_dic
         return self.test_result
 
