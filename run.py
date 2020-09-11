@@ -12,27 +12,34 @@ args = vars(ap.parse_args())
 
 
 def run(project, threads_num, loops):
+    '''
+
+    :param project: 项目名称，保持与project目录项目名称一致
+    :param threads_num: 并发数
+    :param loops: 循环次数
+    :return:
+    '''
     jmeter = Script(project)
     path = getpath(project)
-    try:
-        shutil.rmtree(path["base"] + "/data/report/{0}".format(project))
-    except Exception:
-        print("删除项目历史报告目录失败")
-        pass
-    try:
-        shutil.rmtree(path["base"] + "/data/result/{0}".format(project))
-    except Exception:
-        print("删除项目历史结果目录失败")
-        pass
-    time.sleep(3)
     excute_jmx_script_list = jmeter.build_jmx(threads_num, loops)
     for jmx_script in excute_jmx_script_list:
+        try:
+            shutil.rmtree(path["base"] + "/data/report/{0}/{1}".format(project, jmx_script[3:-4]))
+        except Exception:
+            print("删除项目历史报告目录失败,目录不存在")
+            pass
+        try:
+            shutil.rmtree(path["base"] + "/data/result/{0}/{1}".format(project, jmx_script[3:-4]))
+        except Exception:
+            print("删除项目历史结果目录失败，目录不存在")
+            pass
+        time.sleep(3)
         start_time = int(time.time())
         jmeter.jmeter_run(jmx_script)
         end_time = int(time.time()) + 5000  # 增加5s以获取更准确的服务器监控数据
         result = Result(project, jmx_script, start_time, end_time)
-        result.set_csv_data(getpath(project).get("result_csv") + "/{0}".format(jmx_script[:-4]))
-        test_result = result.set_result_data(getpath(project).get("report_path") + "/{0}".format(jmx_script[:-4]),
+        result.set_csv_data(getpath(project).get("result_csv") + "/{0}".format(jmx_script[3:-4]))
+        test_result = result.set_result_data(getpath(project).get("report_path") + "/{0}".format(jmx_script[3:-4]),
                                              threads_num, loops)
         result_out(project, jmx_script, test_result)
 

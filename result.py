@@ -16,6 +16,11 @@ class Result():
         self.end_time = end_time
 
     def set_csv_data(self, path):
+        '''
+        保存测试结果csv文件数据到数据库
+        :param path: 测试结果csv文件存放路径
+        :return:
+        '''
         file_list = os.listdir(path)
         for file_name in file_list:
             if file_name.endswith("csv"):
@@ -33,6 +38,13 @@ class Result():
         db["csv_data"].insert_all(csv_data, hash_id="id")
 
     def set_result_data(self, path, threads_num, loops):
+        '''
+        保存测试统计结果json文件数据到数据库
+        :param path: 测试结果，statistics.json文件存放路径
+        :param threads_num: 并发数
+        :param loops: 循环次数
+        :return:
+        '''
         cpu_rate_list = self.get_grafana_result("cpu")
         cpu_rate_avg = self.cpu_avg(cpu_rate_list)
         memory_rate_list = self.get_grafana_result("memory")
@@ -47,14 +59,14 @@ class Result():
         db = Database(config.db)
         db["test_result"].insert({
             "project": self.project,
-            "scenario": self.jmx_script[:-4].replace("tmp", ""),
+            "scenario": self.jmx_script[3:-4],
             "threads_num": threads_num,
             "loops": loops,
             "start_time": str_start_time,
             "result": data_dic},
             hash_id="id")
         data_dic["project"] = self.project
-        data_dic["scenario"] = self.jmx_script[:-4].replace("tmp", "")
+        data_dic["scenario"] = self.jmx_script[3:-4]
         data_dic["start_time"] = str_start_time
         data_dic["threads_num"] = threads_num
         data_dic["loops"] = loops
@@ -62,6 +74,10 @@ class Result():
         return self.test_result
 
     def get_project_config(self):
+        '''
+        获取项目配置
+        :return:
+        '''
         try:
             config_path = getpath(self.project).get("config_path")
             with open(config_path, "r", encoding='utf-8')as f:
@@ -71,6 +87,11 @@ class Result():
             print("请在项目配置文件（config.json）中设置grafana配置")
 
     def get_grafana_result(self, rate_name):
+        '''
+        获取项目grafana监控数据，默认取返回结果中第一个服务的监控数据作为返回数据
+        :param rate_name:监控名称
+        :return:
+        '''
         project_config = self.get_project_config()
         rate_name_url = project_config.get(rate_name)
         header = project_config.get("grafana_header")
@@ -80,10 +101,20 @@ class Result():
         return rate_list
 
     def cpu_avg(self, data_list):
-        avg = sum(data_list) / len(data_list)
+        '''
+        计算压测时间段内CPU占用率
+        :param data_list:
+        :return:
+        '''
+        avg = sum(data_list)*100 / len(data_list)
         return avg
 
     def memory_avg(self, data_list):
+        '''
+        计算压测时间段内内存占用率
+        :param data_list:
+        :return:
+        '''
         project_config = self.get_project_config()
-        avg = sum(data_list) / (1024 * 1024 * 1024 * project_config.get("memory_total") * len(data_list))
+        avg = sum(data_list) *100/ (1024 * 1024 * 1024 * project_config.get("memory_total") * len(data_list))
         return avg

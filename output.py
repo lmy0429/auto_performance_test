@@ -5,10 +5,11 @@ from string import Template
 
 def result_out(project, jmx_script, test_result):
     output_path = getpath(project).get("result_csv")
-    with open("{0}/{1}/{1}_{2}.csv".format(output_path, jmx_script[:-4], time.strftime("%Y%m%d%H%M%S")), "a")as f:
+    with open("{0}/{1}/{1}_{2}.csv".format(output_path, jmx_script[3:-4], time.strftime("%Y%m%d%H%M%S")), "a",
+              encoding="utf-8")as f:
         f.write(
-            "transaction,sampleCount,errorCount,errorPct,meanResTime,minResTime,maxResTime,90%ResTime,95%ResTime,"
-            "99%ResTime,throughput,CPU,memory,receivedKBytesPerSec,sentKBytesPerSec\n")
+            "Lable,#样本,异常,异常%,平均响应时间,最小响应时间,最大响应时间,90%响应时间,95%响应时间,"
+            "99%响应时间,Throughput,CPU%,memory%,接收KB/sec,发送KB/sec\n")
         del test_result["project"]
         del test_result["scenario"]
         del test_result["start_time"]
