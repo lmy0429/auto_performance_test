@@ -47,7 +47,7 @@ def run(project, threads_num, loops):
 project = args["project"]
 threads_num = args["threads_num"]
 loops = args["loops"]
-# project = "UA"
+# project = "testproject"
 # threads_num = 1
 # loops = 1
 run(project, threads_num, loops)
